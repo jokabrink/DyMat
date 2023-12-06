@@ -356,8 +356,8 @@ def _load_v1_1_normal(
     for i in range(len(names)):
         blocknum = mat["dataInfo"][i][0]  # data block
         value = mat["dataInfo"][i][1]
-        column = abs(value) - 1  # column
-        sign = copysign(1.0, value)  # sign
+        column = abs(value) - 1
+        sign = copysign(1.0, value)
         if column:
             variables[names[i]] = (
                 descr[i],
