@@ -354,10 +354,12 @@ def _load_v1_0(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile:
 
 def load(fileName: str) -> DyMatFile:
     mat = loadmat(fileName, matlab_compatible=True, chars_as_strings=False)
-    try:
-        fileInfo = strMatNormal(mat["Aclass"])
-    except KeyError:
-        raise DyMatFileError("File structure not supported!")
+
+    if "Aclass" not in mat:
+        raise DyMatFileError("file does not have 'Aclass' variable")
+
+    fileInfo = strMatNormal(mat["Aclass"])
+
     if fileInfo[1] == "1.1":
         if fileInfo[3] == "binTrans":
             return _load_v1_1_trans(mat, fileName)
