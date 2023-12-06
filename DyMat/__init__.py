@@ -331,10 +331,29 @@ def _load_v1_1_normal(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile
     )
 
 
+def _load_v1_0(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile:
+    # files generated with dymola, save as..., only plotted ...
+    # fake the structure of a 1.1 transposed file
+    names = strMatNormal(mat["names"])  # names
+    _vars: dict[str, tuple[str, int, int, float]] = {}
+    _blocks: list[int] = []
+    _blocks.append(0)
+    mat["data_0"] = mat["data"].transpose()
+    del mat["data"]
+    _absc = (names[0], "")
+    for i in range(1, len(names)):
+        _vars[names[i]] = ("", 0, i, 1)
+    return DyMatFile(
+        fileName=fileName,
+        mat=mat,
+        variables=_vars,
+        blocks=_blocks,
+        abscissa=_absc,
+    )
+
+
 def load(fileName: str) -> DyMatFile:
     mat = loadmat(fileName, matlab_compatible=True, chars_as_strings=False)
-    _vars = {}
-    _blocks = []
     try:
         fileInfo = strMatNormal(mat["Aclass"])
     except KeyError:
@@ -347,16 +366,6 @@ def load(fileName: str) -> DyMatFile:
         else:
             raise Exception("File structure not supported!")
     elif fileInfo[1] == "1.0":
-        # files generated with dymola, save as..., only plotted ...
-        # fake the structure of a 1.1 transposed file
-        names = strMatNormal(mat["names"])  # names
-        _blocks.append(0)
-        mat["data_0"] = mat["data"].transpose()
-        del mat["data"]
-        _absc = (names[0], "")
-        for i in range(1, len(names)):
-            _vars[names[i]] = ("", 0, i, 1)
+        return _load_v1_0(mat, fileName)
     else:
         raise Exception("File structure not supported!")
-
-    return DyMatFile(fileName=fileName, mat=mat, variables=_vars, blocks=_blocks, abscissa=_absc)
