@@ -266,7 +266,45 @@ def _load_v1_1(
     fileName: str,
     transpose: bool = False,
 ) -> DyMatFile:
-    raise NotImplementedError("")
+    variables: dict[str, tuple[str, int, int, float]] = {}
+    blocks: list[int] = []
+    if transpose is True:
+        names = strMatTrans(mat["name"])  # names
+        descr = strMatTrans(mat["description"])  # descriptions
+    else:
+        names = strMatNormal(mat["name"])  # names
+        descr = strMatNormal(mat["description"])  # descriptions
+
+    for i in range(len(names)):
+        if transpose is True:
+            blocknum = mat["dataInfo"][0][i]
+            value = mat["dataInfo"][1][i]
+        else:
+            blocknum = mat["dataInfo"][i][0]
+            value = mat["dataInfo"][i][1]
+        column = abs(value) - 1
+        sign = copysign(1.0, value)
+        if column:
+            variables[names[i]] = (
+                descr[i],
+                blocknum,
+                column,
+                sign,
+            )
+            if not blocknum in blocks:
+                blocks.append(blocknum)
+                if transpose is False:
+                    b = f"data_{blocknum}"
+                    mat[b] = mat[b].transpose()
+        else:
+            _absc = (names[i], descr[i])
+    return DyMatFile(
+        fileName=fileName,
+        mat=mat,
+        variables=variables,
+        blocks=blocks,
+        abscissa=_absc,
+    )
 
 
 def _load_v1_1_trans(
@@ -373,9 +411,9 @@ def load(fileName: str) -> DyMatFile:
 
     if fileInfo[1] == "1.1":
         if fileInfo[3] == "binNormal":
-            return _load_v1_1_normal(mat, fileName)
+            return _load_v1_1(mat, fileName)
         elif fileInfo[3] == "binTrans":
-            return _load_v1_1_trans(mat, fileName)
+            return _load_v1_1(mat, fileName, transpose=True)
         else:
             raise DyMatFileError(f"invalid file structure representation: '{fileInfo[3]}'")
     elif fileInfo[1] == "1.0":
