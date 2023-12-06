@@ -34,5 +34,8 @@ Repository = "https://github.com/jokabrink/DyMat"
 [tool.setuptools]
 packages = ["DyMat", "DyMat.Export"]
 
+[project.scripts]
+dymat-export = "DyMat.Export.DyMatExport:main"
+
 [tool.black]
 line-length = 100
