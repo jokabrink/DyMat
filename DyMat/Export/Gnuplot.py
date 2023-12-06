@@ -26,24 +26,24 @@ def export(dm, varList, fileName=None, formatOptions={}):
     """Export DyMat data to files readable by gnuplot"""
 
     if not fileName:
-        fileName = dm.fileName+'.gpd'
+        fileName = dm.fileName + ".gpd"
 
     vDict = dm.sortByBlocks(varList)
     for blk in vDict.keys():
         vList = vDict[blk]
-        
+
         nd = [(n, dm.description(n)) for n in vList]
         nd.insert(0, dm._absc)
-        
-        oFile = open('%s.%02d' % (fileName, blk), 'w')
-        oFile.write('### file generated with DyMat from %s\n' % dm.fileName)
+
+        oFile = open("%s.%02d" % (fileName, blk), "w")
+        oFile.write("### file generated with DyMat from %s\n" % dm.fileName)
         for i in range(len(nd)):
             n, d = nd[i]
-            oFile.write('# %3i %s - %s\n' % (i+1, n, d))
+            oFile.write("# %3i %s - %s\n" % (i + 1, n, d))
 
         vData = dm.getVarArray(vList)
 
         for i in range(vData.shape[1]):
-            oFile.write('\t'.join(['%g'%v for v in vData[:,i]]) + '\n')
+            oFile.write("\t".join(["%g" % v for v in vData[:, i]]) + "\n")
 
         oFile.close()

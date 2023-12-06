@@ -23,19 +23,20 @@
 
 import scipy.io
 
+
 def export(dm, varList, fileName=None, formatOptions={}):
     """Export DyMat data to a simple MATLAB file"""
 
     if not fileName:
-        fileName = dm.fileName+'.mat'
+        fileName = dm.fileName + ".mat"
 
     vList = dm.sortByBlocks(varList)
-    
+
     md = {}
     for block in vList:
         for n in vList[block]:
             md[n] = dm.data(n)
-        absc = '%s_%02i' % (dm._absc[0], block)
+        absc = "%s_%02i" % (dm._absc[0], block)
         md[str(absc)] = dm.abscissa(block, True)
 
-    scipy.io.savemat(fileName, md, oned_as='row')
+    scipy.io.savemat(fileName, md, oned_as="row")

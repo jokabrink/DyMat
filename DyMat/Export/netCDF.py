@@ -30,13 +30,13 @@ import string
 
 
 class NameConverter:
-    allow0 = string.ascii_letters + string.digits + '_'
-    allow  = allow0 + '@+-.'
-    repl   = '_'
-    
+    allow0 = string.ascii_letters + string.digits + "_"
+    allow = allow0 + "@+-."
+    repl = "_"
+
     def __init__(self):
         self.used_names = []
-        
+
     def __call__(self, name):
         n = list(name)
         if not n[0] in self.allow0:
@@ -44,33 +44,33 @@ class NameConverter:
         for i in range(1, len(n)):
             if not n[i] in self.allow:
                 n[i] = self.repl
-        s = ''.join(n)
+        s = "".join(n)
         while s in self.used_names:
-            s += '_'
+            s += "_"
         self.used_names.append(s)
         return s
 
-    
+
 def export(dm, varList, fileName=None, formatOptions={}):
     """Export DyMat data to a netCDF file"""
 
     if not fileName:
-        fileName = dm.fileName+'.nc'
+        fileName = dm.fileName + ".nc"
 
-    ncFile = nc.netcdf_file(fileName, 'w')
-    ncFile.comment = 'file generated with DyMat from %s' % dm.fileName
+    ncFile = nc.netcdf_file(fileName, "w")
+    ncFile.comment = "file generated with DyMat from %s" % dm.fileName
 
-    convertNames = formatOptions.get('convertNames', False)
+    convertNames = formatOptions.get("convertNames", False)
 
     if convertNames:
         nameConv = NameConverter()
-    
+
     vList = dm.sortByBlocks(varList)
     for block in vList:
         a, aname, adesc = dm.abscissa(block)
-        dim = '%s_%02i' % (aname, block)
+        dim = "%s_%02i" % (aname, block)
         ncFile.createDimension(dim, a.shape[0])
-        av = ncFile.createVariable(dim, 'd', (dim,))
+        av = ncFile.createVariable(dim, "d", (dim,))
         av.description = adesc
         av.block = block
         av[:] = a
@@ -79,7 +79,7 @@ def export(dm, varList, fileName=None, formatOptions={}):
                 name = nameConv(vn)
             else:
                 name = vn
-            v = ncFile.createVariable(name, 'd', (dim,))
+            v = ncFile.createVariable(name, "d", (dim,))
             d = dm.description(vn)
             if d:
                 v.description = d

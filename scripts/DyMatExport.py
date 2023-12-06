@@ -29,20 +29,78 @@ arg = argparse.ArgumentParser()
 
 grp = arg.add_mutually_exclusive_group(required=True)
 
-grp.add_argument('-i', '--info', action='store_true', help='show some information on the file')
-grp.add_argument('-l', '--list', action='store_true', help='list variables')
-grp.add_argument('-d', '--descriptions', action='store_true', help='list variables with descriptions')
-grp.add_argument('-t', '--tree', action='store_true', help='list variables as name tree')
-grp.add_argument('-s', '--shared-data', nargs=1, metavar='VAR', help='list connections of variable')
-grp.add_argument('-m', '--list-formats', action='store_true', help='list supported export formats')
-grp.add_argument('-e', '--export', nargs=1, metavar='VARLIST', help='export these variables')
-grp.add_argument('-x', '--export-file', nargs=1, metavar="FILE", help='export variables listed in this file')
+grp.add_argument(
+    "-i",
+    "--info",
+    action="store_true",
+    help="show some information on the file",
+)
+grp.add_argument(
+    "-l",
+    "--list",
+    action="store_true",
+    help="list variables",
+)
+grp.add_argument(
+    "-d",
+    "--descriptions",
+    action="store_true",
+    help="list variables with descriptions",
+)
+grp.add_argument(
+    "-t",
+    "--tree",
+    action="store_true",
+    help="list variables as name tree",
+)
+grp.add_argument(
+    "-s",
+    "--shared-data",
+    nargs=1,
+    metavar="VAR",
+    help="list connections of variable",
+)
+grp.add_argument(
+    "-m",
+    "--list-formats",
+    action="store_true",
+    help="list supported export formats",
+)
+grp.add_argument(
+    "-e",
+    "--export",
+    nargs=1,
+    metavar="VARLIST",
+    help="export these variables",
+)
+grp.add_argument(
+    "-x",
+    "--export-file",
+    nargs=1,
+    metavar="FILE",
+    help="export variables listed in this file",
+)
 
-arg.add_argument('-o', '--outfile', nargs=1, help='write exported data to this file')
-arg.add_argument('-f', '--format', nargs=1, help='export data in this format')
-arg.add_argument('-p', '--options', nargs=1, help='export options specific to export format')
+arg.add_argument(
+    "-o",
+    "--outfile",
+    nargs=1,
+    help="write exported data to this file",
+)
+arg.add_argument(
+    "-f",
+    "--format",
+    nargs=1,
+    help="export data in this format",
+)
+arg.add_argument(
+    "-p",
+    "--options",
+    nargs=1,
+    help="export options specific to export format",
+)
 
-arg.add_argument('matfile', nargs=1, help='MAT-file')
+arg.add_argument("matfile", nargs=1, help="MAT-file")
 
 pargs = arg.parse_args()
 
@@ -52,10 +110,10 @@ if pargs.info:
     blocks = dm.blocks()
     blocks.sort()
     for b in blocks:
-        print('Block %02d:' % b)
-        s = dm.mat['data_%d' % (b)].shape
+        print("Block %02d:" % b)
+        s = dm.mat["data_%d" % (b)].shape
         v = len(dm.names(b))
-        print('  %d variables point to %d columns with %d timesteps' % (v, s[0]-1, s[1]))
+        print("  %d variables point to %d columns with %d timesteps" % (v, s[0] - 1, s[1]))
 
 elif pargs.list:
     for n in dm.names():
@@ -65,22 +123,31 @@ elif pargs.descriptions:
     nn = dm.names()
     nlen = max((len(n) for n in nn))
     for n in dm.names():
-        print("%s | %02d | %s" % (n.ljust(nlen), dm.block(n), dm.description(n)))
+        print(
+            "%s | %02d | %s"
+            % (
+                n.ljust(nlen),
+                dm.block(n),
+                dm.description(n),
+            )
+        )
 
 elif pargs.tree:
     t = dm.nameTree()
+
     def printBranch(branch, level):
         if level > 0:
-            tmp = '  |'*level+'--'
+            tmp = "  |" * level + "--"
         else:
-            tmp = '--'
+            tmp = "--"
         for elem in branch:
             sub = branch[elem]
             if isinstance(sub, dict):
-                print(tmp+elem)
-                printBranch(sub, level+1)
+                print(tmp + elem)
+                printBranch(sub, level + 1)
             else:
-                print('%s%s (%s)' % (tmp, elem, sub))
+                print("%s%s (%s)" % (tmp, elem, sub))
+
     printBranch(t, 0)
 
 elif pargs.shared_data:
@@ -89,31 +156,33 @@ elif pargs.shared_data:
     if sd:
         print(v)
         for n, s in sd:
-            print('    = % 2d * %s' % (s, n))
+            print("    = % 2d * %s" % (s, n))
 
 # FIXME: this should work without providing a filename
 elif pargs.list_formats:
     import DyMat.Export
-    for n in DyMat.Export.formats:
-        print('%s : %s' % (n, DyMat.Export.formats[n]))
 
-else: # pargs.export or pargs.export_file
+    for n in DyMat.Export.formats:
+        print("%s : %s" % (n, DyMat.Export.formats[n]))
+
+else:  # pargs.export or pargs.export_file
     if pargs.export:
-        varList = [v.strip() for v in pargs.export[0].split(',')]
+        varList = [v.strip() for v in pargs.export[0].split(",")]
     else:
-        varList = [l.split('|')[0].strip() for l in open(pargs.export_file[0], 'r') if l]
+        varList = [l.split("|")[0].strip() for l in open(pargs.export_file[0], "r") if l]
     if pargs.outfile:
         outFileName = pargs.outfile[0]
     else:
         outFileName = None
     options = {}
     if pargs.options:
-        tmp = [v.strip().split('=') for v in pargs.options[0].split(',')]
+        tmp = [v.strip().split("=") for v in pargs.options[0].split(",")]
         for x in tmp:
             options[x[0]] = x[1]
     import DyMat.Export
+
     if pargs.format:
         fmt = pargs.format[0]
     else:
-        fmt = 'CSV'
+        fmt = "CSV"
     DyMat.Export.export(fmt, dm, varList, outFileName, options)
