@@ -1,0 +1,4 @@
+*.sw[op]
+
+DyMat.egg-info/
+__pycache__/
