@@ -264,6 +264,39 @@ class DyMatFile:
 DymolaMat = DyMatFile
 
 
+def _load_v1_1_trans(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile:
+    # usually files from openmodelica or dymola auto saved,
+    # all methods rely on this structure since this was the only
+    # one understand by earlier versions
+    names = strMatTrans(mat["name"])  # names
+    descr = strMatTrans(mat["description"])  # descriptions
+    _vars: dict[str, tuple[str, int, int, float]] = {}
+    _blocks: list[int] = []
+    for i in range(len(names)):
+        d = mat["dataInfo"][0][i]  # data block
+        x = mat["dataInfo"][1][i]
+        c = abs(x) - 1  # column
+        s = sign(x)  # sign
+        if c:
+            _vars[names[i]] = (
+                descr[i],
+                d,
+                c,
+                s,
+            )
+            if not d in _blocks:
+                _blocks.append(d)
+        else:
+            _absc = (names[i], descr[i])
+    return DyMatFile(
+        fileName=fileName,
+        mat=mat,
+        variables=_vars,
+        blocks=_blocks,
+        abscissa=_absc,
+    )
+
+
 def load(fileName: str) -> DyMatFile:
     mat = loadmat(fileName, matlab_compatible=True, chars_as_strings=False)
     _vars = {}
@@ -274,27 +307,7 @@ def load(fileName: str) -> DyMatFile:
         raise DyMatFileError("File structure not supported!")
     if fileInfo[1] == "1.1":
         if fileInfo[3] == "binTrans":
-            # usually files from openmodelica or dymola auto saved,
-            # all methods rely on this structure since this was the only
-            # one understand by earlier versions
-            names = strMatTrans(mat["name"])  # names
-            descr = strMatTrans(mat["description"])  # descriptions
-            for i in range(len(names)):
-                d = mat["dataInfo"][0][i]  # data block
-                x = mat["dataInfo"][1][i]
-                c = abs(x) - 1  # column
-                s = sign(x)  # sign
-                if c:
-                    _vars[names[i]] = (
-                        descr[i],
-                        d,
-                        c,
-                        s,
-                    )
-                    if not d in _blocks:
-                        _blocks.append(d)
-                else:
-                    _absc = (names[i], descr[i])
+            return _load_v1_1_trans(mat, fileName)
         elif fileInfo[3] == "binNormal":
             # usually files from dymola, save as...,
             # variables are mapped to the structure above ('binTrans')
