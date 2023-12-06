@@ -281,19 +281,19 @@ def _load_v1_1_trans(
     variables: dict[str, tuple[str, int, int, float]] = {}
     blocks: list[int] = []
     for i in range(len(names)):
-        d = mat["dataInfo"][0][i]  # data block
-        x = mat["dataInfo"][1][i]
-        c = abs(x) - 1  # column
-        s = copysign(1.0, x)  # sign
-        if c:
+        blocknum = mat["dataInfo"][0][i]  # data block
+        value = mat["dataInfo"][1][i]
+        column = abs(value) - 1
+        sign = copysign(1.0, value)
+        if column:
             variables[names[i]] = (
                 descr[i],
-                d,
-                c,
-                s,
+                blocknum,
+                column,
+                sign,
             )
-            if not d in blocks:
-                blocks.append(d)
+            if not blocknum in blocks:
+                blocks.append(blocknum)
         else:
             _absc = (names[i], descr[i])
     return DyMatFile(
@@ -316,20 +316,20 @@ def _load_v1_1_normal(
     variables: dict[str, tuple[str, int, int, float]] = {}
     blocks: list[int] = []
     for i in range(len(names)):
-        d = mat["dataInfo"][i][0]  # data block
-        x = mat["dataInfo"][i][1]
-        c = abs(x) - 1  # column
-        s = copysign(1.0, x)  # sign
-        if c:
+        blocknum = mat["dataInfo"][i][0]  # data block
+        value = mat["dataInfo"][i][1]
+        column = abs(value) - 1  # column
+        sign = copysign(1.0, value)  # sign
+        if column:
             variables[names[i]] = (
                 descr[i],
-                d,
-                c,
-                s,
+                blocknum,
+                column,
+                sign,
             )
-            if not d in blocks:
-                blocks.append(d)
-                b = "data_%d" % (d)
+            if not blocknum in blocks:
+                blocks.append(blocknum)
+                b = f"data_{blocknum}"
                 mat[b] = mat[b].transpose()
         else:
             _absc = (names[i], descr[i])
