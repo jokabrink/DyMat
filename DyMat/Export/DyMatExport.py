@@ -32,7 +32,8 @@ import DyMat
 
 def run(args):
     import DyMat
-    dm = DyMat.DyMatFile(args.matfile[0])
+
+    dm = DyMat.DyMatFile(args.matfile)
 
     if args.info:
         blocks = dm.blocks()
@@ -79,7 +80,7 @@ def run(args):
         printBranch(t, 0)
 
     elif args.shared_data:
-        v = args.shared_data[0]
+        v = args.shared_data
         sd = dm.sharedData(v)
         if sd:
             print(v)
@@ -95,25 +96,20 @@ def run(args):
 
     else:  # args.export or args.export_file
         if args.export:
-            varList = [v.strip() for v in args.export[0].split(",")]
+            varList = [v.strip() for v in args.export.split(",")]
         else:
-            varList = [l.split("|")[0].strip() for l in open(args.export_file[0], "r") if l]
-        if args.outfile:
-            outFileName = args.outfile[0]
-        else:
-            outFileName = None
+            varList = [l.split("|")[0].strip() for l in open(args.export_file, "r") if l]
+
         options = {}
         if args.options:
-            tmp = [v.strip().split("=") for v in args.options[0].split(",")]
+            tmp = [v.strip().split("=") for v in args.options.split(",")]
             for x in tmp:
                 options[x[0]] = x[1]
         import DyMat.Export
 
-        if args.format:
-            fmt = args.format[0]
-        else:
-            fmt = "CSV"
-        DyMat.Export.export(fmt, dm, varList, outFileName, options)
+        fmt = "CSV" if args.format is None else args.format
+
+        DyMat.Export.export(fmt, dm, varList, args.outfile, options)
 
 
 def main(argv=None):
@@ -148,7 +144,6 @@ def main(argv=None):
     grp.add_argument(
         "-s",
         "--shared-data",
-        nargs=1,
         metavar="VAR",
         help="list connections of variable",
     )
@@ -161,14 +156,12 @@ def main(argv=None):
     grp.add_argument(
         "-e",
         "--export",
-        nargs=1,
         metavar="VARLIST",
         help="export these variables",
     )
     grp.add_argument(
         "-x",
         "--export-file",
-        nargs=1,
         metavar="FILE",
         help="export variables listed in this file",
     )
@@ -176,23 +169,20 @@ def main(argv=None):
     parser.add_argument(
         "-o",
         "--outfile",
-        nargs=1,
         help="write exported data to this file",
     )
     parser.add_argument(
         "-f",
         "--format",
-        nargs=1,
         help="export data in this format",
     )
     parser.add_argument(
         "-p",
         "--options",
-        nargs=1,
         help="export options specific to export format",
     )
 
-    parser.add_argument("matfile", nargs=1, help="MAT-file")
+    parser.add_argument("matfile", help="MAT-file")
 
     args = parser.parse_args()
     run(args)
