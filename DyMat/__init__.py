@@ -366,8 +366,10 @@ def load(fileName: str) -> DyMatFile:
         elif fileInfo[3] == "binTrans":
             return _load_v1_1_trans(mat, fileName)
         else:
-            raise Exception("File structure not supported!")
+            raise DyMatFileError(f"invalid file structure representation: '{fileInfo[3]}'")
     elif fileInfo[1] == "1.0":
+        if fileInfo[3] != "binNormal":
+            raise DyMatFileError(f"File version 1.0 not `binNormal`: '{fileInfo[3]}'")
         return _load_v1_0(mat, fileName)
     else:
-        raise Exception("File structure not supported!")
+        raise DyMatFileError(f"invalid file version: '{fileInfo[1]}'")
