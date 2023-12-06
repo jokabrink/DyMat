@@ -33,7 +33,7 @@ import DyMat
 def run(args):
     import DyMat
 
-    dm = DyMat.DyMatFile(args.matfile)
+    dm = DyMat.load(args.matfile)
 
     if args.info:
         blocks = dm.blocks()

@@ -1,4 +1,5 @@
 # Copyright (c) 2011, Joerg Raedler (Berlin, Germany)
+#               2023, Jonas Kock am Brink
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification,
@@ -25,7 +26,14 @@ __version__ = "0.7"
 __author__ = "Joerg Raedler (joerg@j-raedler.de)"
 __license__ = "BSD License (http://www.opensource.org/licenses/bsd-license.php)"
 
-import sys, math, numpy, scipy.io
+import math
+import os
+import sys
+from math import copysign
+from typing import Union
+
+import numpy
+from scipy.io import loadmat
 
 # extract strings from the matrix
 strMatNormal = lambda a: ["".join(s).rstrip() for s in a]
@@ -35,79 +43,26 @@ strMatTrans = lambda a: ["".join(s).rstrip() for s in zip(*a)]
 sign = lambda x: math.copysign(1.0, x)
 
 
+class DyMatFileError(Exception):
+    pass
+
+
 class DyMatFile:
     """A result file written by Dymola or OpenModelica"""
 
-    def __init__(self, fileName):
-        """Open the file fileName and parse contents"""
+    def __init__(
+        self,
+        fileName: str,
+        mat: dict[str, numpy.ndarray],
+        variables: dict[str, tuple[str, int, int, float]],
+        blocks: list[int],
+        abscissa: tuple[str, str],
+    ):
         self.fileName = fileName
-        self.mat = scipy.io.loadmat(fileName, chars_as_strings=False)
-        self._vars = {}
-        self._blocks = []
-        try:
-            fileInfo = strMatNormal(self.mat["Aclass"])
-        except KeyError:
-            raise Exception("File structure not supported!")
-        if fileInfo[1] == "1.1":
-            if fileInfo[3] == "binTrans":
-                # usually files from openmodelica or dymola auto saved,
-                # all methods rely on this structure since this was the only
-                # one understand by earlier versions
-                names = strMatTrans(self.mat["name"])  # names
-                descr = strMatTrans(self.mat["description"])  # descriptions
-                for i in range(len(names)):
-                    d = self.mat["dataInfo"][0][i]  # data block
-                    x = self.mat["dataInfo"][1][i]
-                    c = abs(x) - 1  # column
-                    s = sign(x)  # sign
-                    if c:
-                        self._vars[names[i]] = (
-                            descr[i],
-                            d,
-                            c,
-                            s,
-                        )
-                        if not d in self._blocks:
-                            self._blocks.append(d)
-                    else:
-                        self._absc = (names[i], descr[i])
-            elif fileInfo[3] == "binNormal":
-                # usually files from dymola, save as...,
-                # variables are mapped to the structure above ('binTrans')
-                names = strMatNormal(self.mat["name"])  # names
-                descr = strMatNormal(self.mat["description"])  # descriptions
-                for i in range(len(names)):
-                    d = self.mat["dataInfo"][i][0]  # data block
-                    x = self.mat["dataInfo"][i][1]
-                    c = abs(x) - 1  # column
-                    s = sign(x)  # sign
-                    if c:
-                        self._vars[names[i]] = (
-                            descr[i],
-                            d,
-                            c,
-                            s,
-                        )
-                        if not d in self._blocks:
-                            self._blocks.append(d)
-                            b = "data_%d" % (d)
-                            self.mat[b] = self.mat[b].transpose()
-                    else:
-                        self._absc = (names[i], descr[i])
-            else:
-                raise Exception("File structure not supported!")
-        elif fileInfo[1] == "1.0":
-            # files generated with dymola, save as..., only plotted ...
-            # fake the structure of a 1.1 transposed file
-            names = strMatNormal(self.mat["names"])  # names
-            self._blocks.append(0)
-            self.mat["data_0"] = self.mat["data"].transpose()
-            del self.mat["data"]
-            self._absc = (names[0], "")
-            for i in range(1, len(names)):
-                self._vars[names[i]] = ("", 0, i, 1)
-        else:
-            raise Exception("File structure not supported!")
+        self.mat = mat
+        self._vars = variables  # name: (description, blocknum, column, sign)
+        self._blocks = blocks  # block_num: np.ndarray with shape (num_points, num_variables)
+        self._absc = abscissa
 
     def blocks(self):
         """Returns the numbers of all data blocks.
@@ -307,3 +262,75 @@ class DyMatFile:
 
 # for compatibility with old versions
 DymolaMat = DyMatFile
+
+
+def load(fileName: str) -> DyMatFile:
+    mat = loadmat(fileName, matlab_compatible=True, chars_as_strings=False)
+    _vars = {}
+    _blocks = []
+    try:
+        fileInfo = strMatNormal(mat["Aclass"])
+    except KeyError:
+        raise DyMatFileError("File structure not supported!")
+    if fileInfo[1] == "1.1":
+        if fileInfo[3] == "binTrans":
+            # usually files from openmodelica or dymola auto saved,
+            # all methods rely on this structure since this was the only
+            # one understand by earlier versions
+            names = strMatTrans(mat["name"])  # names
+            descr = strMatTrans(mat["description"])  # descriptions
+            for i in range(len(names)):
+                d = mat["dataInfo"][0][i]  # data block
+                x = mat["dataInfo"][1][i]
+                c = abs(x) - 1  # column
+                s = sign(x)  # sign
+                if c:
+                    _vars[names[i]] = (
+                        descr[i],
+                        d,
+                        c,
+                        s,
+                    )
+                    if not d in _blocks:
+                        _blocks.append(d)
+                else:
+                    _absc = (names[i], descr[i])
+        elif fileInfo[3] == "binNormal":
+            # usually files from dymola, save as...,
+            # variables are mapped to the structure above ('binTrans')
+            names = strMatNormal(mat["name"])  # names
+            descr = strMatNormal(mat["description"])  # descriptions
+            for i in range(len(names)):
+                d = mat["dataInfo"][i][0]  # data block
+                x = mat["dataInfo"][i][1]
+                c = abs(x) - 1  # column
+                s = sign(x)  # sign
+                if c:
+                    _vars[names[i]] = (
+                        descr[i],
+                        d,
+                        c,
+                        s,
+                    )
+                    if not d in _blocks:
+                        _blocks.append(d)
+                        b = "data_%d" % (d)
+                        mat[b] = mat[b].transpose()
+                else:
+                    _absc = (names[i], descr[i])
+        else:
+            raise Exception("File structure not supported!")
+    elif fileInfo[1] == "1.0":
+        # files generated with dymola, save as..., only plotted ...
+        # fake the structure of a 1.1 transposed file
+        names = strMatNormal(mat["names"])  # names
+        _blocks.append(0)
+        mat["data_0"] = mat["data"].transpose()
+        del mat["data"]
+        _absc = (names[0], "")
+        for i in range(1, len(names)):
+            _vars[names[i]] = ("", 0, i, 1)
+    else:
+        raise Exception("File structure not supported!")
+
+    return DyMatFile(fileName=fileName, mat=mat, variables=_vars, blocks=_blocks, abscissa=_absc)
