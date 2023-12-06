@@ -39,6 +39,7 @@ from scipy.io import loadmat
 strMatNormal = lambda a: ["".join(s).rstrip() for s in a]
 strMatTrans = lambda a: ["".join(s).rstrip() for s in zip(*a)]
 
+
 class DyMatFileError(Exception):
     pass
 
@@ -260,7 +261,18 @@ class DyMatFile:
 DymolaMat = DyMatFile
 
 
-def _load_v1_1_trans(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile:
+def _load_v1_1(
+    mat: dict[str, numpy.ndarray],
+    fileName: str,
+    transpose: bool = False,
+) -> DyMatFile:
+    raise NotImplementedError("")
+
+
+def _load_v1_1_trans(
+    mat: dict[str, numpy.ndarray],
+    fileName: str,
+) -> DyMatFile:
     # usually files from openmodelica or dymola auto saved,
     # all methods rely on this structure since this was the only
     # one understand by earlier versions
@@ -293,7 +305,10 @@ def _load_v1_1_trans(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile:
     )
 
 
-def _load_v1_1_normal(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile:
+def _load_v1_1_normal(
+    mat: dict[str, numpy.ndarray],
+    fileName: str,
+) -> DyMatFile:
     # usually files from dymola, save as...,
     # variables are mapped to the structure above ('binTrans')
     names = strMatNormal(mat["name"])  # names
@@ -327,7 +342,10 @@ def _load_v1_1_normal(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile
     )
 
 
-def _load_v1_0(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile:
+def _load_v1_0(
+    mat: dict[str, numpy.ndarray],
+    fileName: str,
+) -> DyMatFile:
     # files generated with dymola, save as..., only plotted ...
     # fake the structure of a 1.1 transposed file
     names = strMatNormal(mat["names"])
