@@ -361,10 +361,10 @@ def load(fileName: str) -> DyMatFile:
     fileInfo = strMatNormal(mat["Aclass"])
 
     if fileInfo[1] == "1.1":
-        if fileInfo[3] == "binTrans":
-            return _load_v1_1_trans(mat, fileName)
-        elif fileInfo[3] == "binNormal":
+        if fileInfo[3] == "binNormal":
             return _load_v1_1_normal(mat, fileName)
+        elif fileInfo[3] == "binTrans":
+            return _load_v1_1_trans(mat, fileName)
         else:
             raise Exception("File structure not supported!")
     elif fileInfo[1] == "1.0":
