@@ -266,29 +266,29 @@ def _load_v1_1_trans(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile:
     # one understand by earlier versions
     names = strMatTrans(mat["name"])  # names
     descr = strMatTrans(mat["description"])  # descriptions
-    _vars: dict[str, tuple[str, int, int, float]] = {}
-    _blocks: list[int] = []
+    variables: dict[str, tuple[str, int, int, float]] = {}
+    blocks: list[int] = []
     for i in range(len(names)):
         d = mat["dataInfo"][0][i]  # data block
         x = mat["dataInfo"][1][i]
         c = abs(x) - 1  # column
         s = copysign(1.0, x)  # sign
         if c:
-            _vars[names[i]] = (
+            variables[names[i]] = (
                 descr[i],
                 d,
                 c,
                 s,
             )
-            if not d in _blocks:
-                _blocks.append(d)
+            if not d in blocks:
+                blocks.append(d)
         else:
             _absc = (names[i], descr[i])
     return DyMatFile(
         fileName=fileName,
         mat=mat,
-        variables=_vars,
-        blocks=_blocks,
+        variables=variables,
+        blocks=blocks,
         abscissa=_absc,
     )
 
@@ -298,22 +298,22 @@ def _load_v1_1_normal(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile
     # variables are mapped to the structure above ('binTrans')
     names = strMatNormal(mat["name"])  # names
     descr = strMatNormal(mat["description"])  # descriptions
-    _vars: dict[str, tuple[str, int, int, float]] = {}
-    _blocks: list[int] = []
+    variables: dict[str, tuple[str, int, int, float]] = {}
+    blocks: list[int] = []
     for i in range(len(names)):
         d = mat["dataInfo"][i][0]  # data block
         x = mat["dataInfo"][i][1]
         c = abs(x) - 1  # column
         s = copysign(1.0, x)  # sign
         if c:
-            _vars[names[i]] = (
+            variables[names[i]] = (
                 descr[i],
                 d,
                 c,
                 s,
             )
-            if not d in _blocks:
-                _blocks.append(d)
+            if not d in blocks:
+                blocks.append(d)
                 b = "data_%d" % (d)
                 mat[b] = mat[b].transpose()
         else:
@@ -321,8 +321,8 @@ def _load_v1_1_normal(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile
     return DyMatFile(
         fileName=fileName,
         mat=mat,
-        variables=_vars,
-        blocks=_blocks,
+        variables=variables,
+        blocks=blocks,
         abscissa=_absc,
     )
 
@@ -330,21 +330,18 @@ def _load_v1_1_normal(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile
 def _load_v1_0(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile:
     # files generated with dymola, save as..., only plotted ...
     # fake the structure of a 1.1 transposed file
-    names = strMatNormal(mat["names"])  # names
-    _vars: dict[str, tuple[str, int, int, float]] = {}
-    _blocks: list[int] = []
-    _blocks.append(0)
+    names = strMatNormal(mat["names"])
+    variables: dict[str, tuple[str, int, int, float]] = {}
     mat["data_0"] = mat["data"].transpose()
     del mat["data"]
-    _absc = (names[0], "")
     for i in range(1, len(names)):
-        _vars[names[i]] = ("", 0, i, 1)
+        variables[names[i]] = ("", 0, i, 1)
     return DyMatFile(
         fileName=fileName,
         mat=mat,
-        variables=_vars,
-        blocks=_blocks,
-        abscissa=_absc,
+        variables=variables,
+        blocks=[0],
+        abscissa=(names[0], ""),
     )
 
 
