@@ -39,10 +39,6 @@ from scipy.io import loadmat
 strMatNormal = lambda a: ["".join(s).rstrip() for s in a]
 strMatTrans = lambda a: ["".join(s).rstrip() for s in zip(*a)]
 
-# sign = lambda x: cmp(x, 0)
-sign = lambda x: math.copysign(1.0, x)
-
-
 class DyMatFileError(Exception):
     pass
 
@@ -276,7 +272,7 @@ def _load_v1_1_trans(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile:
         d = mat["dataInfo"][0][i]  # data block
         x = mat["dataInfo"][1][i]
         c = abs(x) - 1  # column
-        s = sign(x)  # sign
+        s = copysign(1.0, x)  # sign
         if c:
             _vars[names[i]] = (
                 descr[i],
@@ -308,7 +304,7 @@ def _load_v1_1_normal(mat: dict[str, numpy.ndarray], fileName: str) -> DyMatFile
         d = mat["dataInfo"][i][0]  # data block
         x = mat["dataInfo"][i][1]
         c = abs(x) - 1  # column
-        s = sign(x)  # sign
+        s = copysign(1.0, x)  # sign
         if c:
             _vars[names[i]] = (
                 descr[i],
