@@ -54,6 +54,23 @@ def array2strings(arr: numpy.ndarray) -> list[str]:
     return res
 
 
+def _collect(
+    value: Union[str, list[str]],
+    *values: str,
+) -> list[str]:
+    """Collect value and values in a flat array
+    >>> _collect("a", "b", "c", "d")
+    ['a', 'b', 'c', 'd']
+
+    >>> _collect(["a", "b"], "c", "d")
+    ['a', 'b', 'c', 'd']
+    """
+    if type(value) is str:
+        return [value, *values]
+    else:
+        return [*value, *values]
+
+
 class DyMatFileError(Exception):
     pass
 
@@ -85,6 +102,11 @@ class DyMatFile:
             return list(self._vars.keys())
         else:
             return [k for (k, v) in self._vars.items() if v[1] == block]
+
+    def descriptions(self, name: Union[str, list[str]], *names: str) -> list[str]:
+        """Given multiple names, return their description in a list."""
+        all_names = _collect(name, *names)
+        return [self._vars[var_name][0] for var_name in all_names]
 
     def data(self, varName: str) -> numpy.ndarray:
         """Return the values of the variable."""
