@@ -22,11 +22,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-def export(dm, varList, fileName=None, formatOptions={}):
+def export(dm, varList, fileName, formatOptions={}):
     """Export DyMat data to files readable by gnuplot"""
-
-    if not fileName:
-        fileName = dm.fileName + ".gpd"
 
     vDict = dm.sortByBlocks(varList)
     for blk in vDict.keys():
@@ -36,7 +33,7 @@ def export(dm, varList, fileName=None, formatOptions={}):
         nd.insert(0, dm._absc)
 
         oFile = open("%s.%02d" % (fileName, blk), "w")
-        oFile.write("### file generated with DyMat from %s\n" % dm.fileName)
+        oFile.write("### file generated with DyMat\n")
         for i in range(len(nd)):
             n, d = nd[i]
             oFile.write("# %3i %s - %s\n" % (i + 1, n, d))

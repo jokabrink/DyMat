@@ -51,17 +51,14 @@ class NameConverter:
         return s
 
 
-def export(dm, varList, fileName=None, formatOptions={}):
+def export(dm, varList, fileName, formatOptions={}):
     """Export DyMat data to a netCDF file using netCDF4"""
 
     if nc is None:
         raise Exception("netCDF4 support not found - please install python-netCDF4!")
 
-    if not fileName:
-        fileName = dm.fileName + ".nc"
-
     ncFile = nc.Dataset(fileName, "w")
-    ncFile.comment = "file generated with DyMat from %s" % dm.fileName
+    ncFile.comment = "file generated with DyMat"
 
     convertNames = formatOptions.get("convertNames", False)
 

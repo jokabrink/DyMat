@@ -51,17 +51,14 @@ class NameConverter:
         return s
 
 
-def export(dm, varList, fileName=None, formatOptions={}):
+def export(dm, varList, fileName, formatOptions={}):
     """Export DyMat data to a HDF5 file"""
 
     if h5py is None:
         raise Exception("HDF5 support not found - please install h5py!")
 
-    if not fileName:
-        fileName = dm.fileName + ".hdf5"
-
     h5File = h5py.File(fileName, "w")
-    h5File.attrs["comment"] = "file generated with DyMat from %s" % dm.fileName
+    h5File.attrs["comment"] = "file generated with DyMat"
 
     convertNames = formatOptions.get("convertNames", False)
 

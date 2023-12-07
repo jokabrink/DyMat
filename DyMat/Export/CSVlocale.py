@@ -25,11 +25,9 @@ import locale
 import os
 
 
-def export(dm, varList, fileName=None, formatOptions={}):
+def export(dm, varList, fileName, formatOptions={}):
     """Export DyMat data to a CSV file using locale number formatting"""
 
-    if not fileName:
-        fileName = dm.fileName + ".l.csv"
     oFile = open(fileName, "w")
 
     locale.setlocale(locale.LC_NUMERIC, locale.getdefaultlocale())

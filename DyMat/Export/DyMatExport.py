@@ -26,6 +26,7 @@
 
 import argparse
 import sys
+import os.path
 
 import DyMat
 
@@ -109,7 +110,7 @@ def run(args):
 
         fmt = "CSV" if args.format is None else args.format
 
-        DyMat.Export.export(fmt, dm, varList, args.outfile, options)
+        DyMat.Export.export(fmt, dm, varList, args.matfile, args.outfile, options)
 
 
 def main(argv=None):

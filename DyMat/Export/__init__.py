@@ -21,22 +21,27 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys, importlib
+import importlib
+import sys
 
+# formats: {key: (extension, helptext)}
 formats = {
-    "CSV": "Comma separated values - read by many spreadsheet programs",
-    "CSVlocale": "Simple CSV with locale number formatting",
-    "Gnuplot": "File format read by gnuplot, a famous plotting package",
-    "netCDF": "netCDF is a format for structured multi-dimensional data",
-    "netCDF4": "netCDF is a format for structured multi-dimensional data (needs python-netCDF4)",
-    "MATLAB": "MATLAB files are binary files of matrix data",
-    "HDF5": "HDF5 is a format for structured multi-dimensional data (needs h5py)",
+    "CSV": ("csv", "Comma separated values - read by many spreadsheet programs"),
+    "CSVlocale": ("l.csv", "Simple CSV with locale number formatting"),
+    "Gnuplot": ("gpd", "File format read by gnuplot, a famous plotting package"),
+    "netCDF": ("nc", "netCDF is a format for structured multi-dimensional data"),
+    "netCDF4": (
+        "nc",
+        "netCDF is a format for structured multi-dimensional data (needs python-netCDF4)",
+    ),
+    "MATLAB": ("mat", "MATLAB files are binary files of matrix data"),
+    "HDF5": ("hdf5", "HDF5 is a format for structured multi-dimensional data (needs h5py)"),
 }
 
 loadedFormats = {}
 
 
-def export(fmt, dm, varList, fileName=None, formatOptions={}):
+def export(fmt, dm, varList, infile, fileName=None, formatOptions={}):
     """Export the data of the DyMatFile object `dm` to a data file. `fmt` is the
     format string, `varList` the list of variables to export. If no `fileName` is
     given, it will be derived from the mat file name. `formatOptions` will be used
@@ -46,16 +51,21 @@ def export(fmt, dm, varList, fileName=None, formatOptions={}):
         - string: fmt
         - DyMolaMat object: dm
         - sequence of strings: varList
+        - string: infilename
         - optional string: fileName
         - optional dictionary: formatOptions
 
     :Returns:
         - None
     """
-    if not fmt in formats:
+    if not fmt in formats.keys():
         raise Exception("Unknown export format specified!")
 
     if not fmt in loadedFormats:
         loadedFormats[fmt] = importlib.import_module(".%s" % fmt, package="DyMat.Export")
+
+    if fileName is None:
+        ext = formats[fmt][0]
+        fileName = infile + "." + ext
 
     return loadedFormats[fmt].export(dm, varList, fileName, formatOptions)

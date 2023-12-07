@@ -26,11 +26,9 @@ import csv
 import numpy
 
 
-def export(dm, varList, fileName=None, formatOptions={}):
+def export(dm, varList, fileName, formatOptions={}):
     """Export DyMat data to a CSV file"""
 
-    if not fileName:
-        fileName = dm.fileName + ".csv"
     oFile = open(fileName, "w")
     csvWriter = csv.writer(oFile)
 

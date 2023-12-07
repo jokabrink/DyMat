@@ -24,11 +24,8 @@
 import scipy.io
 
 
-def export(dm, varList, fileName=None, formatOptions={}):
+def export(dm, varList, fileName, formatOptions={}):
     """Export DyMat data to a simple MATLAB file"""
-
-    if not fileName:
-        fileName = dm.fileName + ".mat"
 
     vList = dm.sortByBlocks(varList)
 
