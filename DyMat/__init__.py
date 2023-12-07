@@ -35,9 +35,6 @@ from typing import Union
 import numpy
 from scipy.io import loadmat
 
-# extract strings from the matrix
-strMatNormal = lambda a: ["".join(s).rstrip() for s in a]
-strMatTrans = lambda a: ["".join(s).rstrip() for s in zip(*a)]
 
 def array2strings(arr: numpy.ndarray) -> list[str]:
     """Convert an array of row char vectors to a list of strings.
@@ -292,11 +289,11 @@ def _load_v1_1(
     variables: dict[str, tuple[str, int, int, float]] = {}
     blocks: list[int] = []
     if transpose is True:
-        names = strMatTrans(mat["name"])  # names
-        descr = strMatTrans(mat["description"])  # descriptions
+        names = array2strings(mat["name"].T)
+        descr = array2strings(mat["description"].T)
     else:
-        names = strMatNormal(mat["name"])  # names
-        descr = strMatNormal(mat["description"])  # descriptions
+        names = array2strings(mat["name"])
+        descr = array2strings(mat["description"])
 
     for i in range(len(names)):
         if transpose is True:
@@ -336,7 +333,7 @@ def _load_v1_0(
 ) -> DyMatFile:
     # files generated with dymola, save as..., only plotted ...
     # fake the structure of a 1.1 transposed file
-    names = strMatNormal(mat["names"])
+    names = array2strings(mat["names"])
     variables: dict[str, tuple[str, int, int, float]] = {}
     mat["data_0"] = mat["data"].transpose()
     del mat["data"]
@@ -357,7 +354,7 @@ def load(fileName: str) -> DyMatFile:
     if "Aclass" not in mat:
         raise DyMatFileError("file does not have 'Aclass' variable")
 
-    fileInfo = strMatNormal(mat["Aclass"])
+    fileInfo = array2strings(mat["Aclass"])
 
     if fileInfo[1] == "1.1":
         if fileInfo[3] == "binNormal":
