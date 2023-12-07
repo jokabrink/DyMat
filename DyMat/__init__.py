@@ -140,11 +140,11 @@ class DyMatFile:
 
     def size(self, blockOrName: Union[int, str]) -> int:
         """Return the number of rows (time steps) of a variable or a block."""
-        if isinstance(blockOrName, Integral):
-            b = blockOrName
-        else:
-            assert isinstance(blockOrName, str)
+        if isinstance(blockOrName, str):
             b = self._vars[blockOrName][1]
+        else:
+            b = blockOrName
+
         di = "data_%d" % (b)
         return self.mat[di].shape[1]
 
@@ -160,11 +160,10 @@ class DyMatFile:
             - numpy.ndarray: values or
             - tuple of numpy.ndarray (values), string (name), string (description)
         """
-        if isinstance(blockOrName, Integral):
-            b = blockOrName
-        else:
-            assert isinstance(blockOrName, str)
+        if isinstance(blockOrName, str):
             b = self._vars[blockOrName][1]
+        else:
+            b = blockOrName
 
         di = "data_%d" % (b)
         if valuesOnly:
