@@ -290,23 +290,27 @@ def _load_v1_1(
     blocks: list[int] = []
     if transpose is True:
         names = array2strings(mat["name"].T)
-        descr = array2strings(mat["description"].T)
+        description = array2strings(mat["description"].T)
+        dataInfo = mat["dataInfo"].T
     else:
         names = array2strings(mat["name"])
-        descr = array2strings(mat["description"])
+        description = array2strings(mat["description"])
+        dataInfo = mat["dataInfo"]
 
     for i in range(len(names)):
-        if transpose is True:
-            blocknum = mat["dataInfo"][0][i]
-            value = mat["dataInfo"][1][i]
-        else:
-            blocknum = mat["dataInfo"][i][0]
-            value = mat["dataInfo"][i][1]
+        # dataInfo[k] yields a 4-tuple with:
+        # k=0: blocknum
+        # k=1: value
+        # k=2: Linear interpolation of column data
+        # k=3: == -1: name not defined outside time range
+        #      ==  0: keep first/last value outside of time range
+        #      ==  1: linear interpolation through first/last two points outside of time range
+        blocknum, value, *_ = dataInfo[i]
         column = abs(value) - 1
         sign = copysign(1.0, value)
         if column:
             variables[names[i]] = (
-                descr[i],
+                description[i],
                 blocknum,
                 column,
                 sign,
@@ -317,13 +321,13 @@ def _load_v1_1(
                     b = f"data_{blocknum}"
                     mat[b] = mat[b].transpose()
         else:
-            _absc = (names[i], descr[i])
+            abscissa = (names[i], description[i])
     return DyMatFile(
         fileName=fileName,
         mat=mat,
         variables=variables,
         blocks=blocks,
-        abscissa=_absc,
+        abscissa=abscissa,
     )
 
 
@@ -333,10 +337,12 @@ def _load_v1_0(
 ) -> DyMatFile:
     # files generated with dymola, save as..., only plotted ...
     # fake the structure of a 1.1 transposed file
+    # keys of mat file: "Aclass", "names", "data"
     names = array2strings(mat["names"])
     variables: dict[str, tuple[str, int, int, float]] = {}
     mat["data_0"] = mat["data"].transpose()
     del mat["data"]
+    # TODO: Change for loop with enumerate(names)?
     for i in range(1, len(names)):
         variables[names[i]] = ("", 0, i, 1)
     return DyMatFile(
@@ -360,6 +366,7 @@ def load(fileName: str) -> DyMatFile:
         if fileInfo[3] == "binNormal":
             return _load_v1_1(mat, fileName)
         elif fileInfo[3] == "binTrans":
+            # binTrans means the data is in (measurements, time) order, transpose it.
             return _load_v1_1(mat, fileName, transpose=True)
         else:
             raise DyMatFileError(f"invalid file structure representation: '{fileInfo[3]}'")
