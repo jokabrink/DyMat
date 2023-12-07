@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "DyMat"
-version = "0.7"
+dynamic = ["version"]
 authors = [
     {name = "Jonas Kock am Brink", email = "jokabrink@posteo.de"},
     {name = "Joerg Raedler", email = "joerg@j-raedler.de"},
@@ -31,11 +31,12 @@ dependencies = [
 [project.urls]
 Repository = "https://github.com/jokabrink/DyMat"
 
-[tool.setuptools]
-packages = ["DyMat", "DyMat.Export"]
-
 [project.scripts]
 dymat-export = "DyMat.Export.DyMatExport:main"
+
+[tool.setuptools]
+packages = ["DyMat", "DyMat.Export"]
+dynamic = {version = {attr = "DyMat.__version__" } }
 
 [tool.black]
 line-length = 100

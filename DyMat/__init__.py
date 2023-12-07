@@ -22,19 +22,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = "0.7"
-__author__ = "Joerg Raedler (joerg@j-raedler.de)"
-__license__ = "BSD License (http://www.opensource.org/licenses/bsd-license.php)"
+from __future__ import annotations
 
-import math
-import os
-import sys
 from math import copysign
 from numbers import Integral
 from typing import Any, Optional, Union
 
 import numpy
 from scipy.io import loadmat
+
+__version__ = "0.8"
+__author__ = "Jonas Kock am Brink (jokabrink@posteo.de)"
+__license__ = "BSD License (http://www.opensource.org/licenses/bsd-license.php)"
 
 
 def array2strings(arr: numpy.ndarray) -> list[str]:
@@ -300,6 +299,7 @@ def _load_v1_0(
 
 
 def load(fileName: str) -> DyMatFile:
+    """Load a trajectory result file from Dymola or OpenModelica"""
     mat = loadmat(fileName, matlab_compatible=True, chars_as_strings=False)
 
     if "Aclass" not in mat:
