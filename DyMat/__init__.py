@@ -30,6 +30,7 @@ import math
 import os
 import sys
 from math import copysign
+from numbers import Integral
 from typing import Any, Optional, Union
 
 import numpy
@@ -118,7 +119,7 @@ class DyMatFile:
 
     def size(self, blockOrName: Union[int, str]) -> int:
         """Return the number of rows (time steps) of a variable or a block."""
-        if isinstance(blockOrName, int):
+        if isinstance(blockOrName, Integral):
             b = blockOrName
         else:
             assert isinstance(blockOrName, str)
@@ -138,7 +139,7 @@ class DyMatFile:
             - numpy.ndarray: values or
             - tuple of numpy.ndarray (values), string (name), string (description)
         """
-        if isinstance(blockOrName, int):
+        if isinstance(blockOrName, Integral):
             b = blockOrName
         else:
             assert isinstance(blockOrName, str)
