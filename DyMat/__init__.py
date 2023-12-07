@@ -110,10 +110,9 @@ class DyMatFile:
 
     def data(self, varName: str) -> numpy.ndarray:
         """Return the values of the variable."""
-        tmp, d, c, s = self._vars[varName]
-        di = "data_%d" % (d)
-        dd: numpy.ndarray = self.mat[di][c]
-        if s < 0:
+        _, blocknum, column, sign = self._vars[varName]
+        dd: numpy.ndarray = self.mat[f"data_{blocknum}"][column]
+        if sign < 0:
             dd = dd * -1
         return dd
 
@@ -131,12 +130,12 @@ class DyMatFile:
     def sharedData(self, varName: str) -> list[tuple[str, float]]:
         """Return variables which share data with this variable, possibly with a different
         sign."""
-        tmp, d, c, s = self._vars[varName]
-        return [
-            (n, v[3] * s)
-            for (n, v) in self._vars.items()
-            if n != varName and v[1] == d and v[2] == c
-        ]
+        _, blocknum, column, sign = self._vars[varName]
+        res = []
+        for name, v in self._vars.items():
+            if name != varName and v[1] == blocknum and v[2] == column:
+                res.append((name, v[3] * sign))
+        return res
 
     def size(self, blockOrName: Union[int, str]) -> int:
         """Return the number of rows (time steps) of a variable or a block."""
@@ -145,8 +144,7 @@ class DyMatFile:
         else:
             b = blockOrName
 
-        di = "data_%d" % (b)
-        return self.mat[di].shape[1]
+        return self.mat[f"data_{b}"].shape[1]
 
     def abscissa(
         self,
@@ -165,7 +163,7 @@ class DyMatFile:
         else:
             b = blockOrName
 
-        di = "data_%d" % (b)
+        di = f"data_{b}"
         if valuesOnly:
             return self.mat[di][0]
         else:
@@ -231,7 +229,7 @@ class DyMatFile:
         is compatible with gnuplot. For more options use DyMat.Export instead.
         """
         d = self.data(varName)
-        a, aname, tmp = self.abscissa(varName)
+        a, aname, _ = self.abscissa(varName)
         print("# %s | %s" % (aname, varName))
         for i in range(d.shape[0]):
             print("%f %g" % (a[i], d[i]))
