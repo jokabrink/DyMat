@@ -269,10 +269,6 @@ class DyMatFile:
             print("%f %g" % (a[i], d[i]))
 
 
-# for compatibility with old versions
-DymolaMat = DyMatFile
-
-
 def _load_v1_1(
     mat: dict[str, numpy.ndarray],
     transpose: bool = False,
