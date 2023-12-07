@@ -63,13 +63,11 @@ class DyMatFile:
 
     def __init__(
         self,
-        fileName: str,
         mat: dict[str, numpy.ndarray],
         variables: dict[str, tuple[str, int, int, float]],
         blocks: list[int],
         abscissa: tuple[str, str],
     ):
-        self.fileName = fileName
         self.mat = mat
         self._vars = variables  # name: (description, blocknum, column, sign)
         self._blocks = blocks  # block_num: np.ndarray with shape (num_points, num_variables)
@@ -277,7 +275,6 @@ DymolaMat = DyMatFile
 
 def _load_v1_1(
     mat: dict[str, numpy.ndarray],
-    fileName: str,
     transpose: bool = False,
 ) -> DyMatFile:
     """There are two types: 'BinTrans' and 'BinNormal'
@@ -330,7 +327,6 @@ def _load_v1_1(
         else:
             abscissa = (name, description)
     return DyMatFile(
-        fileName=fileName,
         mat=mat,
         variables=variables,
         blocks=blocks,
@@ -340,7 +336,6 @@ def _load_v1_1(
 
 def _load_v1_0(
     mat: dict[str, numpy.ndarray],
-    fileName: str,
 ) -> DyMatFile:
     # files generated with dymola, save as..., only plotted ...
     # fake the structure of a 1.1 transposed file
@@ -353,7 +348,6 @@ def _load_v1_0(
     for i in range(1, len(names)):
         variables[names[i]] = ("", 0, i, 1)
     return DyMatFile(
-        fileName=fileName,
         mat=mat,
         variables=variables,
         blocks=[0],
@@ -371,15 +365,15 @@ def load(fileName: str) -> DyMatFile:
 
     if fileInfo[1] == "1.1":
         if fileInfo[3] == "binNormal":
-            return _load_v1_1(mat, fileName)
+            return _load_v1_1(mat)
         elif fileInfo[3] == "binTrans":
             # binTrans means the data is in (measurements, time) order, transpose it.
-            return _load_v1_1(mat, fileName, transpose=True)
+            return _load_v1_1(mat, transpose=True)
         else:
             raise DyMatFileError(f"invalid file structure representation: '{fileInfo[3]}'")
     elif fileInfo[1] == "1.0":
         if fileInfo[3] != "binNormal":
             raise DyMatFileError(f"File version 1.0 not `binNormal`: '{fileInfo[3]}'")
-        return _load_v1_0(mat, fileName)
+        return _load_v1_0(mat)
     else:
         raise DyMatFileError(f"invalid file version: '{fileInfo[1]}'")
