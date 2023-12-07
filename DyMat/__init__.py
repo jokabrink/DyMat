@@ -116,34 +116,34 @@ class DyMatFile:
             if n != varName and v[1] == d and v[2] == c
         ]
 
-    def size(self, blockOrName) -> int:
+    def size(self, blockOrName: Union[int, str]) -> int:
         """Return the number of rows (time steps) of a variable or a block."""
-        try:
-            b = int(blockOrName)
-        except:
+        if isinstance(blockOrName, int):
+            b = blockOrName
+        else:
+            assert isinstance(blockOrName, str)
             b = self._vars[blockOrName][1]
         di = "data_%d" % (b)
         return self.mat[di].shape[1]
 
     def abscissa(
         self,
-        blockOrName,
+        blockOrName: Union[int, str],
         valuesOnly: bool = False,
     ):
         """Return the values, name and description of the abscissa that belongs to a
         variable or block. If valuesOnly is true, only the values are returned.
 
-        :Arguments:
-            - integer (block) or string (variable name): blockOrName
-            - optional bool: valuesOnly
         :Returns:
             - numpy.ndarray: values or
             - tuple of numpy.ndarray (values), string (name), string (description)
         """
-        try:
-            b = int(blockOrName)
-        except:
+        if isinstance(blockOrName, int):
+            b = blockOrName
+        else:
+            assert isinstance(blockOrName, str)
             b = self._vars[blockOrName][1]
+
         di = "data_%d" % (b)
         if valuesOnly:
             return self.mat[di][0]
