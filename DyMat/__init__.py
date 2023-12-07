@@ -285,19 +285,26 @@ def _load_v1_1(
       methods rely on this structure since this was the only understood by earlier versions
     - BinNormal: Shape is (time, variables). Usually saved files from Dymola, it is converted to
       BinTrans representation
+
+    Source:
+    <https://www.claytex.com/tech-blog/trajectory-file-what-is-it-dissecting-a-dymola-result-file/>
     """
     variables: dict[str, tuple[str, int, int, float]] = {}
     blocks: list[int] = []
     if transpose is True:
         names = array2strings(mat["name"].T)
-        description = array2strings(mat["description"].T)
+        descriptions = array2strings(mat["description"].T)
         dataInfo = mat["dataInfo"].T
     else:
         names = array2strings(mat["name"])
-        description = array2strings(mat["description"])
+        descriptions = array2strings(mat["description"])
         dataInfo = mat["dataInfo"]
 
-    for i in range(len(names)):
+    assert (
+        len(dataInfo) == len(names) == len(descriptions)
+    ), f"lengths of `dataInfo`, `names` and `descriptions` do not match. They are {len(dataInfo)}, {len(names)} and {len(descriptions)}"
+
+    for info, name, description in zip(dataInfo, names, descriptions):
         # dataInfo[k] yields a 4-tuple with:
         # k=0: blocknum
         # k=1: value
@@ -305,12 +312,12 @@ def _load_v1_1(
         # k=3: == -1: name not defined outside time range
         #      ==  0: keep first/last value outside of time range
         #      ==  1: linear interpolation through first/last two points outside of time range
-        blocknum, value, *_ = dataInfo[i]
+        blocknum, value, *_ = info
         column = abs(value) - 1
         sign = copysign(1.0, value)
         if column:
-            variables[names[i]] = (
-                description[i],
+            variables[name] = (
+                description,
                 blocknum,
                 column,
                 sign,
@@ -321,7 +328,7 @@ def _load_v1_1(
                     b = f"data_{blocknum}"
                     mat[b] = mat[b].transpose()
         else:
-            abscissa = (names[i], description[i])
+            abscissa = (name, description)
     return DyMatFile(
         fileName=fileName,
         mat=mat,
