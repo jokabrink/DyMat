@@ -39,6 +39,23 @@ from scipy.io import loadmat
 strMatNormal = lambda a: ["".join(s).rstrip() for s in a]
 strMatTrans = lambda a: ["".join(s).rstrip() for s in zip(*a)]
 
+def array2strings(arr: numpy.ndarray) -> list[str]:
+    """Convert an array of row char vectors to a list of strings.
+    >>> arr = numpy.array([["T", "e", "s", "t"], ["h", "i", "", ""]])
+    >>> array2strings(arr)
+    ['Test', 'hi']
+
+    >>> arr = numpy.array([["T", "h"], ["e", "i"], ["s", ""], ["t", ""]])
+    >>> array2strings(arr.T)
+    ['Test', 'hi']
+
+    This is usually for `name` and `description`
+    """
+    width = arr.shape[-1]
+    view = numpy.ascontiguousarray(arr).view(dtype=f"U{width}")
+    res = [str(numpy.char.rstrip(x[0])) for x in view]
+    return res
+
 
 class DyMatFileError(Exception):
     pass
