@@ -266,6 +266,12 @@ def _load_v1_1(
     fileName: str,
     transpose: bool = False,
 ) -> DyMatFile:
+    """There are two types: 'BinTrans' and 'BinNormal'
+    - BinTrans: Shape is (variables, time). Usually files from OpenModelica or Dymola auto save, all
+      methods rely on this structure since this was the only understood by earlier versions
+    - BinNormal: Shape is (time, variables). Usually saved files from Dymola, it is converted to
+      BinTrans representation
+    """
     variables: dict[str, tuple[str, int, int, float]] = {}
     blocks: list[int] = []
     if transpose is True:
@@ -296,79 +302,6 @@ def _load_v1_1(
                 if transpose is False:
                     b = f"data_{blocknum}"
                     mat[b] = mat[b].transpose()
-        else:
-            _absc = (names[i], descr[i])
-    return DyMatFile(
-        fileName=fileName,
-        mat=mat,
-        variables=variables,
-        blocks=blocks,
-        abscissa=_absc,
-    )
-
-
-def _load_v1_1_trans(
-    mat: dict[str, numpy.ndarray],
-    fileName: str,
-) -> DyMatFile:
-    # usually files from openmodelica or dymola auto saved,
-    # all methods rely on this structure since this was the only
-    # one understand by earlier versions
-    names = strMatTrans(mat["name"])  # names
-    descr = strMatTrans(mat["description"])  # descriptions
-    variables: dict[str, tuple[str, int, int, float]] = {}
-    blocks: list[int] = []
-    for i in range(len(names)):
-        blocknum = mat["dataInfo"][0][i]  # data block
-        value = mat["dataInfo"][1][i]
-        column = abs(value) - 1
-        sign = copysign(1.0, value)
-        if column:
-            variables[names[i]] = (
-                descr[i],
-                blocknum,
-                column,
-                sign,
-            )
-            if not blocknum in blocks:
-                blocks.append(blocknum)
-        else:
-            _absc = (names[i], descr[i])
-    return DyMatFile(
-        fileName=fileName,
-        mat=mat,
-        variables=variables,
-        blocks=blocks,
-        abscissa=_absc,
-    )
-
-
-def _load_v1_1_normal(
-    mat: dict[str, numpy.ndarray],
-    fileName: str,
-) -> DyMatFile:
-    # usually files from dymola, save as...,
-    # variables are mapped to the structure above ('binTrans')
-    names = strMatNormal(mat["name"])  # names
-    descr = strMatNormal(mat["description"])  # descriptions
-    variables: dict[str, tuple[str, int, int, float]] = {}
-    blocks: list[int] = []
-    for i in range(len(names)):
-        blocknum = mat["dataInfo"][i][0]  # data block
-        value = mat["dataInfo"][i][1]
-        column = abs(value) - 1
-        sign = copysign(1.0, value)
-        if column:
-            variables[names[i]] = (
-                descr[i],
-                blocknum,
-                column,
-                sign,
-            )
-            if not blocknum in blocks:
-                blocks.append(blocknum)
-                b = f"data_{blocknum}"
-                mat[b] = mat[b].transpose()
         else:
             _absc = (names[i], descr[i])
     return DyMatFile(
