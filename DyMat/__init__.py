@@ -250,16 +250,6 @@ class DyMatFile:
             )
         return numpy.concatenate(v, 0)
 
-    def writeVar(self, name: str) -> None:
-        """Write the values of the abscissa and the variabale to stdout. The text format
-        is compatible with gnuplot. For more options use DyMat.Export instead.
-        """
-        d = self.data(name)
-        a, aname, _ = self.abscissa(name)
-        print("# %s | %s" % (aname, name))
-        for i in range(d.shape[0]):
-            print("%f %g" % (a[i], d[i]))
-
 
 def _load_v1_1(
     mat: dict[str, numpy.ndarray],
