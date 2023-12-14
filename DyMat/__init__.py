@@ -113,9 +113,9 @@ class DyMatFile:
         all_names = _collect(name, *names)
         return [self._vars[var_name][0] for var_name in all_names]
 
-    def data(self, varName: str) -> numpy.ndarray:
+    def data(self, name: str) -> numpy.ndarray:
         """Return the values of the variable."""
-        _, blocknum, column, sign = self._vars[varName]
+        _, blocknum, column, sign = self._vars[name]
         dd: numpy.ndarray = self.mat[f"data_{blocknum}"][column]
         if sign < 0:
             dd = dd * -1
@@ -145,21 +145,21 @@ class DyMatFile:
     # add a dictionary-like interface
     __getitem__ = data
 
-    def block(self, varName: str) -> int:
+    def block(self, name: str) -> int:
         """Returns the block number of the variable."""
-        return self._vars[varName][1]
+        return self._vars[name][1]
 
     def description(self, name: str) -> str:
         """Return the description of a single variable name."""
         return self._vars[name][0]
 
-    def sharedData(self, varName: str) -> list[tuple[str, float]]:
+    def sharedData(self, name: str) -> list[tuple[str, float]]:
         """Return variables which share data with this variable, possibly with a different
         sign."""
-        _, blocknum, column, sign = self._vars[varName]
+        _, blocknum, column, sign = self._vars[name]
         res = []
         for name, v in self._vars.items():
-            if name != varName and v[1] == blocknum and v[2] == column:
+            if name != name and v[1] == blocknum and v[2] == column:
                 res.append((name, v[3] * sign))
         return res
 
@@ -231,32 +231,32 @@ class DyMatFile:
 
     def getVarArray(
         self,
-        varNames: list[str],
+        names: list[str],
         withAbscissa: bool = True,
     ) -> numpy.ndarray:
-        """Return the values of all variables in varNames combined as a 2d-array. If
+        """Return the values of all variables in names combined as a 2d-array. If
         withAbscissa is True, include abscissa's values first.
         **All variables must share the same block!**
         """
         # FIXME: check blocks!
-        v = [numpy.array(self.data(n), ndmin=2) for n in varNames]
+        v = [numpy.array(self.data(n), ndmin=2) for n in names]
         if withAbscissa:
             v.insert(
                 0,
                 numpy.array(
-                    self.abscissa(varNames[0], True),
+                    self.abscissa(names[0], True),
                     ndmin=2,
                 ),
             )
         return numpy.concatenate(v, 0)
 
-    def writeVar(self, varName: str) -> None:
+    def writeVar(self, name: str) -> None:
         """Write the values of the abscissa and the variabale to stdout. The text format
         is compatible with gnuplot. For more options use DyMat.Export instead.
         """
-        d = self.data(varName)
-        a, aname, _ = self.abscissa(varName)
-        print("# %s | %s" % (aname, varName))
+        d = self.data(name)
+        a, aname, _ = self.abscissa(name)
+        print("# %s | %s" % (aname, name))
         for i in range(d.shape[0]):
             print("%f %g" % (a[i], d[i]))
 
