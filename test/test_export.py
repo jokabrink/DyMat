@@ -39,14 +39,14 @@ files = (
 )
 
 for file in files:
-    df = DyMat.load(file)
+    dmat = DyMat.load(file)
 
     # pick a maximum of 30 random variable names
-    names = df.names()
+    names = dmat.names()
     x = min(len(names), 30)
     va = random.sample(names, x)
 
     # do export
     for format in DyMat.Export.formats.keys():
         fileName = f"{file}.{format}"
-        DyMat.Export.export(format, df, va, file, fileName=fileName)
+        DyMat.Export.export(format, dmat, va, file, fileName=fileName)
