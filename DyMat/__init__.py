@@ -50,7 +50,7 @@ def array2strings(arr: numpy.ndarray) -> list[str]:
     """
     width = arr.shape[-1]
     view = numpy.ascontiguousarray(arr).view(dtype=f"U{width}")
-    res = [str(x[0]).rstrip() for x in view]
+    res = list(map(lambda s: numpy.char.rstrip(bytes(s[0], "latin-1")).item().decode(), view))
     return res
 
 
