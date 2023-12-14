@@ -87,8 +87,8 @@ class DyMatFile:
     ):
         self.mat = mat
         self._vars = variables  # name: (description, blocknum, column, sign)
-        self._blocks = blocks  # block_num: np.ndarray with shape (num_points, num_variables)
-        self._absc = abscissa
+        self._blocks = blocks  # [block_num]
+        self._absc = abscissa  # [(name, description)]
 
     def blocks(self) -> list[int]:
         """Returns the numbers of all data blocks."""
@@ -317,10 +317,7 @@ def _load_v1_0(
     )
 
 
-def load(fileName: str) -> DyMatFile:
-    """Load a trajectory result file from Dymola or OpenModelica"""
-    mat = loadmat(fileName, matlab_compatible=True, chars_as_strings=False)
-
+def _load(mat: dict[str, numpy.ndarray]) -> DyMatFile:
     if "Aclass" not in mat:
         raise DyMatFileError("file does not have 'Aclass' variable")
 
@@ -340,3 +337,9 @@ def load(fileName: str) -> DyMatFile:
         return _load_v1_0(mat)
     else:
         raise DyMatFileError(f"invalid file version: '{fileInfo[1]}'")
+
+
+def load(fileName: str) -> DyMatFile:
+    """Load a trajectory result file from Dymola or OpenModelica"""
+    mat = loadmat(fileName, matlab_compatible=True)
+    return _load(mat)
