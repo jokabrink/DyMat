@@ -95,14 +95,14 @@ class DyMatFile:
         """Returns the numbers of all data blocks."""
         return self._blocks
 
-    def names(self, block: Optional[int] = None) -> list[str]:
-        """Returns the names of all variables. If block is given, only variables of this
-        block are listed.
+    def names(self, pattern: Optional[str] = None) -> list[str]:
+        """All available variable names or a subset given the regex.
+        I.e.: list(filter(lambda n: n=="some.comp.value")) == names("^some.comp.value$")
         """
-        if block is None:
+        if pattern is None:
             return list(self._vars.keys())
         else:
-            return [k for (k, v) in self._vars.items() if v[1] == block]
+            return self.regex(pattern)
 
     def descriptions(self, name: Union[str, list[str]], *names: str) -> list[str]:
         """Given multiple names, return their description in a list."""
