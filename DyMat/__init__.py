@@ -24,6 +24,7 @@
 
 from __future__ import annotations
 
+import re
 from math import copysign
 from numbers import Integral
 from typing import Any, Optional, Union
@@ -115,6 +116,27 @@ class DyMatFile:
         if sign < 0:
             dd = dd * -1
         return dd
+
+    def regex(
+        self,
+        pattern: Union[str, list[str]],
+        *patterns: str,
+        prefixes: Optional[list[str]] = None,
+    ) -> list[str]:
+        """
+        prefixes: List of
+        E.g.: regex("epp\\d.P$", prefixes=["bus1", "bus2"]) \
+              == ["bus1.epp1.P", "bus1.epp2.P", "bus2.epp1.P", "bus2.epp2.P"]
+        """
+        all_names = _collect(pattern, *patterns)
+        if prefixes is None:
+            regex_func = re.compile("|".join(all_names))
+        else:
+            s = "^(%s)(%s)" % ("|".join(prefixes), "|".join(all_names))
+            regex_func = re.compile(s)
+
+        filtered_names = filter(lambda e: regex_func.match(e), self._vars.keys())
+        return list(filtered_names)
 
     # add a dictionary-like interface
     __getitem__ = data
