@@ -104,7 +104,11 @@ class DyMatFile:
         else:
             return self.regex(pattern)
 
-    def descriptions(self, name: Union[str, list[str]], *names: str) -> list[str]:
+    def descriptions(
+        self,
+        name: Union[str, list[str]],
+        *names: str,
+    ) -> list[str]:
         """Given multiple names, return their description in a list."""
         all_names = _collect(name, *names)
         return [self._vars[var_name][0] for var_name in all_names]
@@ -318,9 +322,7 @@ def _load_v1_1(
     )
 
 
-def _load_v1_0(
-    mat: dict[str, numpy.ndarray],
-) -> DyMatFile:
+def _load_v1_0(mat: dict[str, numpy.ndarray]) -> DyMatFile:
     # files generated with dymola, save as..., only plotted ...
     # fake the structure of a 1.1 transposed file
     # keys of mat file: "Aclass", "names", "data"
