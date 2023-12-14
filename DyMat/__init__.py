@@ -158,9 +158,9 @@ class DyMatFile:
         sign."""
         _, blocknum, column, sign = self._vars[name]
         res = []
-        for name, v in self._vars.items():
-            if name != name and v[1] == blocknum and v[2] == column:
-                res.append((name, v[3] * sign))
+        for nam, v in self._vars.items():
+            if nam != name and v[1] == blocknum and v[2] == column:
+                res.append((nam, v[3] * sign))
         return res
 
     def size(self, blockOrName: Union[int, str]) -> int:
