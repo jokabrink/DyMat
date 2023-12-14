@@ -145,9 +145,9 @@ class DyMatFile:
         """Returns the block number of the variable."""
         return self._vars[varName][1]
 
-    def description(self, varName: str) -> str:
-        """Returns the description string of the variable."""
-        return self._vars[varName][0]
+    def description(self, name: str) -> str:
+        """Return the description of a single variable name."""
+        return self._vars[name][0]
 
     def sharedData(self, varName: str) -> list[tuple[str, float]]:
         """Return variables which share data with this variable, possibly with a different
