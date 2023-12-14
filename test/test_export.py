@@ -23,7 +23,12 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import DyMat, DyMat.Export, random
+import random
+
+import DyMat
+import DyMat.Export
+
+random.seed(0)
 
 files = (
     "DoublePendulum_Dymola-7.4.mat",
@@ -33,23 +38,15 @@ files = (
     "DoublePendulum_Dymola-2012-SaveAsPlotted.mat",
 )
 
-formats = DyMat.Export.formats.keys()
-
-
-for fi in files:
-    # open file
-    df = DyMat.DyMatFile(fi)
+for file in files:
+    df = DyMat.load(file)
 
     # pick a maximum of 30 random variable names
-    n = df.names()
-    x = min(len(n), 30)
-    va = random.sample(df.names(), x)
-    print(va)
+    names = df.names()
+    x = min(len(names), 30)
+    va = random.sample(names, x)
 
     # do export
-    for fo in formats:
-        print("Exporting %s to %s" % (fi, fo))
-        try:
-            DyMat.Export.export(fo, df, va)
-        except Exception as e:
-            print(e)
+    for format in DyMat.Export.formats.keys():
+        fileName = f"{file}.{format}"
+        DyMat.Export.export(format, df, va, file, fileName=fileName)
