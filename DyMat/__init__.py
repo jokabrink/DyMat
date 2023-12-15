@@ -323,13 +323,13 @@ class DyMatFile:
             arrs = []
             for name in all_names:
                 _, name_blocknum, name_column, name_sign = self._vars[name]
-                name_block = self.mat[f"{name_blocknum}"]
+                name_block = self.mat[f"data_{name_blocknum}"]
                 if name_blocknum == blocknum:
                     # No interpolation needed
-                    a = name_block[:, name_column] * name_sign
+                    a = name_block[name_column, :] * name_sign
                 else:
-                    name_abscissa = name_block[:, 0]
-                    name_data = name_block[:, name_column] * name_sign
+                    name_abscissa = self._abscissa_from_blocknum(name_blocknum)
+                    name_data = name_block[name_column, :] * name_sign
                     a = numpy.interp(absc, name_abscissa, name_data)
                 arrs.append(a)
 
