@@ -97,6 +97,16 @@ class DyMatFile:
     ) -> numpy.ndarray:
         return self.mat[f"data_{blocknum}"][0]
 
+    def _data_from_blocknum(
+        self,
+        names: list[str],
+        blocknum: int,
+    ) -> numpy.ndarray:
+        columns = numpy.array([self._vars[name][2] for name in names])
+        signs = numpy.array([[self._vars[name][3] for name in names]])
+        value: numpy.ndarray = self.mat[f"data_{blocknum}"][columns, :] * signs
+        return value
+
     def _tallest_block(self):
         """Get block number with highest number of time points.
 
@@ -277,6 +287,60 @@ class DyMatFile:
             block_num = self._tallest_block()
 
         return self._abscissa_from_blocknum(block_num)
+
+    def time_data(
+        self,
+        name: Union[str, list[str]],
+        *names: str,
+        regex: bool = False,
+        prefixes: Optional[list[str]] = None,
+        mask: Optional[numpy.ndarray] = None,
+    ) -> tuple[numpy.ndarray, numpy.ndarray]:
+        """Returns (t, x) with x.shape == (len(t), len(names)).
+        If regex is True, then the ordering of columns is ordered by "type"
+        (prefixes major). If regex is False, the ordering is by appearence in
+        the name dictionary.
+        """
+        all_names = _collect(name, *names)
+
+        if regex is True:
+            all_names = self.regex(all_names, prefixes=prefixes)
+        else:
+            if prefixes is not None:
+                # Precdence: prefix[0]+name[0], prefix[1]+name[0], ..., prefix[0]+name[1], etc.
+                all_names = [prefix + name for name in all_names for prefix in prefixes]
+
+        if len(all_names) == 0:
+            raise ValueError("list `names` is empty.")
+
+        blocknums = set(self._vars[name][1] for name in all_names)
+        if len(blocknums) > 1:
+            # Not all variable names are from the same block. So they have different shapes
+
+            blocknum = self._tallest_block()
+            absc = self._abscissa_from_blocknum(blocknum)
+
+            arrs = []
+            for name in all_names:
+                _, name_blocknum, name_column, name_sign = self._vars[name]
+                name_block = self.mat[f"{name_blocknum}"]
+                if name_blocknum == blocknum:
+                    # No interpolation needed
+                    a = name_block[:, name_column] * name_sign
+                else:
+                    name_abscissa = name_block[:, 0]
+                    name_data = name_block[:, name_column] * name_sign
+                    a = numpy.interp(absc, name_abscissa, name_data)
+                arrs.append(a)
+
+            data = numpy.stack(arrs, axis=1)
+        else:
+            blocknum = self._vars[all_names[0]][1]
+            data = self._data_from_blocknum(all_names, blocknum).T
+            absc = self._abscissa_from_blocknum(blocknum)
+
+        return absc, data
+
 
 def _load_v1_1(
     mat: dict[str, numpy.ndarray],
