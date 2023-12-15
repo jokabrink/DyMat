@@ -91,6 +91,20 @@ class DyMatFile:
         self._blocks = blocks  # [block_num]
         self._absc = abscissa  # [(name, description)]
 
+    def _abscissa_from_blocknum(
+        self,
+        blocknum: int,
+    ) -> numpy.ndarray:
+        return self.mat[f"data_{blocknum}"][0]
+
+    def _tallest_block(self):
+        """Get block number with highest number of time points.
+
+        NOTE: This assumes the shape (n_points, n_variables)."""
+        blocks = [(self.mat[f"data_{b}"].shape[0], b) for b in self._blocks]
+        _, block_num = max(blocks)
+        return block_num
+
     def abscissa(
         self,
         blockOrName: Union[int, str],
@@ -260,11 +274,9 @@ class DyMatFile:
         if name is not None:
             _, block_num, _, _ = self._vars[name]
         else:
-            blocks = [(self.mat[f"data_{b}"].shape[0], b) for b in self._blocks]
-            _, block_num = max(blocks)
+            block_num = self._tallest_block()
 
-        return self.mat[f"data_{block_num}"][0]
-
+        return self._abscissa_from_blocknum(block_num)
 
 def _load_v1_1(
     mat: dict[str, numpy.ndarray],
