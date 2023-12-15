@@ -81,13 +81,17 @@ def test_load():
 
 
 def test_array2strings():
-    arr = np.array([["T", "e", "s", "t"], ["h", "i", "", ""]])
+    arr = np.array([["T", "e", "s", "t"], ["h", "i", "", " "]])
     strings = DyMat.array2strings(arr)
     assert strings == ["Test", "hi"]
 
-    arr = np.array([["T", "h"], ["e", "i"], ["s", ""], ["t", ""]])
+    arr = np.array([["T", "h"], ["e", "i"], ["s", " "], ["t", " "]])
     strings = DyMat.array2strings(arr.T)
     assert strings == ["Test", "hi"]
+
+    arr = np.array([["Ã", "¤", " "], ["â", "\x9a", "¡"]])
+    strings = DyMat.array2strings(arr)
+    assert strings == ["ä", "⚡"]
 
 
 def test__collect():
@@ -192,3 +196,5 @@ def test_names(dmat):
 
     names = {"alpha"}
     assert names.issubset(dmat.names("alpha"))
+
+    assert dmat.names("x") == ["x"]
