@@ -172,6 +172,21 @@ class DyMatFile:
 
         return self.mat[f"data_{b}"].shape[1]
 
+    def time(
+        self,
+        name: Optional[str] = None,
+    ) -> numpy.ndarray:
+        """Return abscissa associated with `name`. If `name` is not supplied,
+        return the abscissa with the highest number of points.
+        """
+        if name is not None:
+            _, block_num, _, _ = self._vars[name]
+        else:
+            blocks = [(self.mat[f"data_{b}"].shape[0], b) for b in self._blocks]
+            _, block_num = max(blocks)
+
+        return self.mat[f"data_{block_num}"][0]
+
     def abscissa(
         self,
         blockOrName: Union[int, str],
