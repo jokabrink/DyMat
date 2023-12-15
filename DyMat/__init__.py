@@ -91,102 +91,6 @@ class DyMatFile:
         self._blocks = blocks  # [block_num]
         self._absc = abscissa  # [(name, description)]
 
-    def blocks(self) -> list[int]:
-        """Returns the numbers of all data blocks."""
-        return self._blocks
-
-    def names(self, pattern: Optional[str] = None) -> list[str]:
-        """All available variable names or a subset given the regex.
-        I.e.: list(filter(lambda n: n=="some.comp.value")) == names("^some.comp.value$")
-        """
-        if pattern is None:
-            return list(self._vars.keys())
-        else:
-            return self.regex(pattern)
-
-    def descriptions(
-        self,
-        name: Union[str, list[str]],
-        *names: str,
-    ) -> list[str]:
-        """Given multiple names, return their description in a list."""
-        all_names = _collect(name, *names)
-        return [self._vars[var_name][0] for var_name in all_names]
-
-    def data(self, name: str) -> numpy.ndarray:
-        """Return the values of the variable."""
-        _, blocknum, column, sign = self._vars[name]
-        dd: numpy.ndarray = self.mat[f"data_{blocknum}"][column]
-        if sign < 0:
-            dd = dd * -1
-        return dd
-
-    def regex(
-        self,
-        pattern: Union[str, list[str]],
-        *patterns: str,
-        prefixes: Optional[list[str]] = None,
-    ) -> list[str]:
-        """
-        prefixes: List of
-        E.g.: regex("epp\\d.P$", prefixes=["bus1", "bus2"]) \
-              == ["bus1.epp1.P", "bus1.epp2.P", "bus2.epp1.P", "bus2.epp2.P"]
-        """
-        all_names = _collect(pattern, *patterns)
-        if prefixes is None:
-            regex_func = re.compile("|".join(all_names))
-        else:
-            s = "^(%s)(%s)" % ("|".join(prefixes), "|".join(all_names))
-            regex_func = re.compile(s)
-
-        filtered_names = filter(lambda e: regex_func.match(e), self._vars.keys())
-        return list(filtered_names)
-
-    # add a dictionary-like interface
-    __getitem__ = data
-
-    def block(self, name: str) -> int:
-        """Returns the block number of the variable."""
-        return self._vars[name][1]
-
-    def description(self, name: str) -> str:
-        """Return the description of a single variable name."""
-        return self._vars[name][0]
-
-    def sharedData(self, name: str) -> list[tuple[str, float]]:
-        """Return variables which share data with this variable, possibly with a different
-        sign."""
-        _, blocknum, column, sign = self._vars[name]
-        res = []
-        for nam, v in self._vars.items():
-            if nam != name and v[1] == blocknum and v[2] == column:
-                res.append((nam, v[3] * sign))
-        return res
-
-    def size(self, blockOrName: Union[int, str]) -> int:
-        """Return the number of rows (time steps) of a variable or a block."""
-        if isinstance(blockOrName, str):
-            b = self._vars[blockOrName][1]
-        else:
-            b = blockOrName
-
-        return self.mat[f"data_{b}"].shape[1]
-
-    def time(
-        self,
-        name: Optional[str] = None,
-    ) -> numpy.ndarray:
-        """Return abscissa associated with `name`. If `name` is not supplied,
-        return the abscissa with the highest number of points.
-        """
-        if name is not None:
-            _, block_num, _, _ = self._vars[name]
-        else:
-            blocks = [(self.mat[f"data_{b}"].shape[0], b) for b in self._blocks]
-            _, block_num = max(blocks)
-
-        return self.mat[f"data_{block_num}"][0]
-
     def abscissa(
         self,
         blockOrName: Union[int, str],
@@ -214,35 +118,37 @@ class DyMatFile:
                 self._absc[1],
             )
 
-    def sortByBlocks(self, varList: list[str]) -> dict[int, list[str]]:
-        """Sort a list of variables by the block number, return a dictionary whose keys
-        are the block numbers and the values are lists of names. All variables in one
-        list will have the same number of values.
-        """
-        vl = [(v, self._vars[v][1]) for v in varList]
-        vDict = {}
-        for bl in self._blocks:
-            l = [v for v, b in vl if b == bl]
-            if l:
-                vDict[bl] = l
-        return vDict
+    def block(self, name: str) -> int:
+        """Returns the block number of the variable."""
+        return self._vars[name][1]
 
-    def nameTree(self) -> dict[str, Any]:
-        """Return a tree of all variable names with respect to the path names. Path
-        elements are separated by dots. The tree will represent the structure of the
-        Modelica models. The tree is returned as a dictionary of dictionaries. The keys
-        are the path elements, values are sub-dictionaries or variable names.
-        """
-        root: dict[str, Any] = {}
-        for v in self._vars.keys():
-            branch = root
-            elem = v.split(".")
-            for e in elem[:-1]:
-                if not e in branch:
-                    branch[e] = {}
-                branch = branch[e]
-            branch[elem[-1]] = v
-        return root
+    def blocks(self) -> list[int]:
+        """Returns the numbers of all data blocks."""
+        return self._blocks
+
+    def data(self, name: str) -> numpy.ndarray:
+        """Return the values of the variable."""
+        _, blocknum, column, sign = self._vars[name]
+        dd: numpy.ndarray = self.mat[f"data_{blocknum}"][column]
+        if sign < 0:
+            dd = dd * -1
+        return dd
+
+    # add a dictionary-like interface
+    __getitem__ = data
+
+    def description(self, name: str) -> str:
+        """Return the description of a single variable name."""
+        return self._vars[name][0]
+
+    def descriptions(
+        self,
+        name: Union[str, list[str]],
+        *names: str,
+    ) -> list[str]:
+        """Given multiple names, return their description in a list."""
+        all_names = _collect(name, *names)
+        return [self._vars[var_name][0] for var_name in all_names]
 
     def getVarArray(
         self,
@@ -264,6 +170,100 @@ class DyMatFile:
                 ),
             )
         return numpy.concatenate(v, 0)
+
+    def names(self, pattern: Optional[str] = None) -> list[str]:
+        """All available variable names or a subset given the regex.
+        I.e.: list(filter(lambda n: n=="some.comp.value")) == names("^some.comp.value$")
+        """
+        if pattern is None:
+            return list(self._vars.keys())
+        else:
+            return self.regex(pattern)
+
+    def nameTree(self) -> dict[str, Any]:
+        """Return a tree of all variable names with respect to the path names. Path
+        elements are separated by dots. The tree will represent the structure of the
+        Modelica models. The tree is returned as a dictionary of dictionaries. The keys
+        are the path elements, values are sub-dictionaries or variable names.
+        """
+        root: dict[str, Any] = {}
+        for v in self._vars.keys():
+            branch = root
+            elem = v.split(".")
+            for e in elem[:-1]:
+                if not e in branch:
+                    branch[e] = {}
+                branch = branch[e]
+            branch[elem[-1]] = v
+        return root
+
+    def regex(
+        self,
+        pattern: Union[str, list[str]],
+        *patterns: str,
+        prefixes: Optional[list[str]] = None,
+    ) -> list[str]:
+        """
+        prefixes: List of
+        E.g.: regex("epp\\d.P$", prefixes=["bus1", "bus2"]) \
+              == ["bus1.epp1.P", "bus1.epp2.P", "bus2.epp1.P", "bus2.epp2.P"]
+        """
+        all_names = _collect(pattern, *patterns)
+        if prefixes is None:
+            regex_func = re.compile("|".join(all_names))
+        else:
+            s = "^(%s)(%s)" % ("|".join(prefixes), "|".join(all_names))
+            regex_func = re.compile(s)
+
+        filtered_names = filter(lambda e: regex_func.match(e), self._vars.keys())
+        return list(filtered_names)
+
+    def sharedData(self, name: str) -> list[tuple[str, float]]:
+        """Return variables which share data with this variable, possibly with a different
+        sign."""
+        _, blocknum, column, sign = self._vars[name]
+        res = []
+        for nam, v in self._vars.items():
+            if nam != name and v[1] == blocknum and v[2] == column:
+                res.append((nam, v[3] * sign))
+        return res
+
+    def size(self, blockOrName: Union[int, str]) -> int:
+        """Return the number of rows (time steps) of a variable or a block."""
+        if isinstance(blockOrName, str):
+            b = self._vars[blockOrName][1]
+        else:
+            b = blockOrName
+
+        return self.mat[f"data_{b}"].shape[1]
+
+    def sortByBlocks(self, varList: list[str]) -> dict[int, list[str]]:
+        """Sort a list of variables by the block number, return a dictionary whose keys
+        are the block numbers and the values are lists of names. All variables in one
+        list will have the same number of values.
+        """
+        vl = [(v, self._vars[v][1]) for v in varList]
+        vDict = {}
+        for bl in self._blocks:
+            l = [v for v, b in vl if b == bl]
+            if l:
+                vDict[bl] = l
+        return vDict
+
+    def time(
+        self,
+        name: Optional[str] = None,
+    ) -> numpy.ndarray:
+        """Return abscissa associated with `name`. If `name` is not supplied,
+        return the abscissa with the highest number of points.
+        """
+        if name is not None:
+            _, block_num, _, _ = self._vars[name]
+        else:
+            blocks = [(self.mat[f"data_{b}"].shape[0], b) for b in self._blocks]
+            _, block_num = max(blocks)
+
+        return self.mat[f"data_{block_num}"][0]
 
 
 def _load_v1_1(
