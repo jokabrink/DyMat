@@ -102,6 +102,12 @@ def test__collect():
     assert lst == ["a", "b", "c", "d"]
 
 
+def test__regex():
+    names = ["a1.b", "a2.b", "a3.b", "b.b", "c.b"]
+    n = DyMat._regex(names, "a")
+    assert n == ["a1.b", "a2.b", "a3.b"]
+
+
 def test_blocks(dmat):
     # assert dmat.blocks() == [2, 1]
     assert set(dmat.blocks()) == {2, 1}

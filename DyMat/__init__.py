@@ -72,6 +72,28 @@ def _collect(
         return [*value, *values]
 
 
+def _regex(
+    names,
+    pattern: Union[str, list[str]],
+    *patterns: str,
+    prefixes: Optional[list[str]] = None,
+) -> list[str]:
+    """
+    prefixes: List of
+    E.g.: regex("epp\\d.P$", prefixes=["bus1", "bus2"]) \
+          == ["bus1.epp1.P", "bus1.epp2.P", "bus2.epp1.P", "bus2.epp2.P"]
+    """
+    all_names = _collect(pattern, *patterns)
+    if prefixes is None:
+        regex_func = re.compile("|".join(all_names))
+    else:
+        s = "^(%s)(%s)" % ("|".join(prefixes), "|".join(all_names))
+        regex_func = re.compile(s)
+
+    filtered_names = filter(lambda e: regex_func.match(e), names)
+    return list(filtered_names)
+
+
 class DyMatFileError(Exception):
     pass
 
@@ -199,10 +221,11 @@ class DyMatFile:
         """All available variable names or a subset given the regex.
         I.e.: list(filter(lambda n: n=="some.comp.value")) == names("^some.comp.value$")
         """
+        keys = self._vars.keys()
         if pattern is None:
-            return list(self._vars.keys())
+            return list(keys)
         else:
-            return self.regex(pattern)
+            return _regex(keys, pattern)
 
     def nameTree(self) -> dict[str, Any]:
         """Return a tree of all variable names with respect to the path names. Path
